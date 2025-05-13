@@ -23,14 +23,14 @@ TARGET_COLUMN = "sentiment"
 
 # --- CHOOSE YOUR SKLEARN MODEL HERE ---
 # Comment out/uncomment to select a model
-#SELECTED_SKLEARN_MODEL = RandomForestClassifier
+# SELECTED_SKLEARN_MODEL = RandomForestClassifier
 # SELECTED_SKLEARN_MODEL = GradientBoostingClassifier
 # SELECTED_SKLEARN_MODEL = LogisticRegression
 # SELECTED_SKLEARN_MODEL = SVC
 # SELECTED_SKLEARN_MODEL = KNeighborsClassifier
 #SELECTED_SKLEARN_MODEL = MultinomialNB
-SELECTED_SKLEARN_MODEL = DecisionTreeClassifier
-#SELECTED_SKLEARN_MODEL = AdaBoostClassifier
+# SELECTED_SKLEARN_MODEL = DecisionTreeClassifier
+ SELECTED_SKLEARN_MODEL = AdaBoostClassifier
 
 load_dotenv(override=True)
 
