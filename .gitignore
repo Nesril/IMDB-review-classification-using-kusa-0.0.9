@@ -1,0 +1,10 @@
+/venv
+/.env
+/tfidf_vectorizer.pkl
+/spam_classifier.pkl
+/secure_spam_model.keras
+/tokenizer.pkl
+/secure_spam_model.joblib
+/__pycache__
+/secure_model_sklearn.model
+/secure_model_sklearn.model.bundle.pkl
