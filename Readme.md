@@ -1,15 +1,3 @@
-Of course! A good README is crucial for any project. It's the front door for other developers.
-
-Here is a rewritten, professional version of your README.md file. It's organized, clear, and uses proper Markdown formatting to be easy to read.
-
----
-
-### How to Use This
-1.  **Copy** the text below.
-2.  **Paste** it into the `README.md` file in your repository.
-3.  **Replace** the placeholder `[your-repo-url]` with the actual URL of your Git repository.
-
----
 
 # IMDb Sentiment Analysis with Kusa
 
@@ -53,8 +41,8 @@ Before you begin, you will need the following:
 
 1.  **Clone the repository:**
     ```sh
-    git clone [your-repo-url]
-    cd <repository-name>
+    git clone https://github.com/Nesril/IMDB-review-classification-using-kusa-0.0.9
+    cd IMDB-review-classification-using-kusa-0.0.9
     ```
 
 2.  **Install the required Python packages:**
@@ -98,15 +86,6 @@ BASE_URL="https://kusa.zadulmead.org/dataset"
 -   `PUBLIC_ID`: The ID of the purchased dataset. For the IMDb reviews dataset, this is `qrRXTFFQbdD`.
 -   `SECRET_KEY`: Your unique API key obtained from your [Kusa dashboard](https://kuusa.netlify.app/dashboard/credentials).
 
-## Contributing
-
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
 
 ## License
 
