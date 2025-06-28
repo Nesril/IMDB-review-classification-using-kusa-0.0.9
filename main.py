@@ -34,13 +34,13 @@ except ImportError:
 
 # 🔧 Framework flag
 TRAINING_FRAMEWORK = "sklearn" # Focus on sklearn for this enhancement
-TARGET_COLUMN = "sentiment" # Or your actual target: "Category", "RainTomorrow"
+TARGET_COLUMN = "Legendary" # Or your actual target: "Category", "RainTomorrow"
 
 # --- CHOOSE YOUR SKLEARN MODEL HERE ---
-SELECTED_SKLEARN_MODEL = LogisticRegression # Example: Start with a robust baseline
+# SELECTED_SKLEARN_MODEL = LogisticRegression # Example: Start with a robust baseline
 # SELECTED_SKLEARN_MODEL = RandomForestClassifier
-# SELECTED_SKLEARN_MODEL = SVC 
-# SELECTED_SKLEARN_MODEL = GradientBoostingClassifier
+#SELECTED_SKLEARN_MODEL = SVC 
+SELECTED_SKLEARN_MODEL = GradientBoostingClassifier
 # SELECTED_SKLEARN_MODEL = MultinomialNB # Good for TF-IDF if no scaling of numerics is done
 
 load_dotenv(override=True)
@@ -118,6 +118,9 @@ def plot_threshold_analysis(y_true, y_proba, model_name, title="Threshold Analys
 def main():
     PUBLIC_ID = os.getenv("PUBLIC_ID")
     SECRET_KEY = os.getenv("SECRET_KEY")
+    BASE_URL = os.getenv("BASE_URL")
+    
+    print(BASE_URL," SECRET_KEY ",SECRET_KEY)
 
     print(f"\n--- Starting Workflow for Kusa SDK with Scikit-learn ---")
     print(f"--- Using Model: {SELECTED_SKLEARN_MODEL.__name__} ---")
@@ -129,8 +132,7 @@ def main():
     if not initialization or "metadata" not in initialization:
         print("❌ SDK Initialization failed."); return
     print(f"SDK Initialized. Total data rows: {initialization['metadata']['totalDataRows']}")
-    # client.preview() was in your code, ensure it exists or use initialization['preview']
-    # print("Data Preview:\n", initialization.get('preview', pd.DataFrame()))
+  
 
 
     print(" Fetching entire dataset...")
@@ -152,11 +154,7 @@ def main():
         "target_column": TARGET_COLUMN,
         "target_encoding": "auto"
     }
-    # Note: If your dataset has significant numeric features and you use "tfidf" or "none"
-    # for reduction, models like LogisticRegression, SVC, KNN benefit from scaling these numeric features.
-    # Your PreprocessingManager would need an option for "scale_numeric_features": True/False
-    # or you'd rely on "pca" which includes scaling.
-    # For MultinomialNB, ensure features are non-negative (TF-IDF is fine).
+
 
     client.configure_preprocessing(preprocessing_config)
     client.run_preprocessing()
@@ -165,13 +163,10 @@ def main():
 
     print(f"🎯 Building training function for {SELECTED_SKLEARN_MODEL.__name__}...")
     
-    # --- Hyperparameter Setup & Optional GridSearchCV ---
-    # Set to True to use GridSearchCV for the selected model
-    USE_GRID_SEARCH = False # CHANGE THIS TO True TO ENABLE GRID SEARCH FOR THE SELECTED MODEL
+    USE_GRID_SEARCH = False 
 
     param_grid_for_tuning = None
-    # Define fixed_params (will be used if not tuning that param, or as part of base estimator for GridSearchCV)
-    # and param_grid (for GridSearchCV to search over)
+
     fixed_hyperparams = {"random_state": 42} # Common params
 
     if SELECTED_SKLEARN_MODEL == RandomForestClassifier:
@@ -207,8 +202,7 @@ def main():
             fixed_hyperparams.update({"C": 1.0, "kernel": "rbf"})
             
     elif SELECTED_SKLEARN_MODEL == GradientBoostingClassifier:
-        # GBC doesn't have class_weight directly, handle imbalance via sample_weight in fit or other methods.
-        # For simplicity, not adding sample_weight to factory here.
+
         if USE_GRID_SEARCH:
              param_grid_for_tuning = {
                 "n_estimators": [100, 200],
@@ -264,8 +258,8 @@ def main():
 
         if hasattr(trained_model_obj, "predict_proba"):
             y_pred_proba = trained_model_obj.predict_proba(X_val_processed)[:, 1]
-            plot_precision_recall_curve(y_true_val, y_pred_proba, model_name_for_plot)
-            plot_threshold_analysis(y_true_val, y_pred_proba, model_name_for_plot)
+            # plot_precision_recall_curve(y_true_val, y_pred_proba, model_name_for_plot)
+            # plot_threshold_analysis(y_true_val, y_pred_proba, model_name_for_plot)
         else:
             print(f"   Note: {model_name_for_plot} does not have predict_proba method. Skipping PR and Threshold plots.")
     else:
