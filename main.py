@@ -7,46 +7,30 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.metrics import precision_recall_curve, average_precision_score, f1_score
 # from sklearn.preprocessing import label_binarize # Not used in current example
 import numpy as np
-import pandas as pd # For DataFrame creation
+import pandas as pd 
 
-# --- Import Scikit-learn models and tuning tools ---
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import GridSearchCV # For hyperparameter tuning
+from sklearn.model_selection import GridSearchCV 
 
 from kusa.client import SecureDatasetClient
-# Conditional TF/PyTorch imports (kept for completeness of factory, but not used if framework is sklearn)
-try:
-    import tensorflow as tf
-except ImportError:
-    tf = None
-try:
-    import torch
-    import torch.nn as nn
-    from torch.utils.data import TensorDataset, DataLoader
-except ImportError:
-    torch = None; nn = None; TensorDataset = None; DataLoader = None
-
 
 # 🔧 Framework flag
-TRAINING_FRAMEWORK = "sklearn" # Focus on sklearn for this enhancement
-TARGET_COLUMN = "Legendary" # Or your actual target: "Category", "RainTomorrow"
+TRAINING_FRAMEWORK = "sklearn" 
+TARGET_COLUMN = "sentiment"
 
-# --- CHOOSE YOUR SKLEARN MODEL HERE ---
-# SELECTED_SKLEARN_MODEL = LogisticRegression # Example: Start with a robust baseline
+SELECTED_SKLEARN_MODEL = LogisticRegression 
 # SELECTED_SKLEARN_MODEL = RandomForestClassifier
-#SELECTED_SKLEARN_MODEL = SVC 
-SELECTED_SKLEARN_MODEL = GradientBoostingClassifier
+# SELECTED_SKLEARN_MODEL = SVC 
+# SELECTED_SKLEARN_MODEL = GradientBoostingClassifier
 # SELECTED_SKLEARN_MODEL = MultinomialNB # Good for TF-IDF if no scaling of numerics is done
 
 load_dotenv(override=True)
 
-
-# In main.py
 
 def train_model_factory(framework="sklearn", model_class=None, fixed_params=None, param_grid=None):
     fixed_params = fixed_params or {}
@@ -76,13 +60,7 @@ def train_model_factory(framework="sklearn", model_class=None, fixed_params=None
                 model.fit(X, y)
                 return model
         return train_model
-    # ... (TensorFlow and PyTorch factory parts remain the same) ...
-    elif framework == "tensorflow":
-        # ... your TF factory ...
-        pass
-    elif framework == "pytorch":
-        # ... your PyTorch factory ...
-        pass
+
     else:
         raise ValueError(f"Unsupported framework for this factory example: {framework}")
 
@@ -118,9 +96,6 @@ def plot_threshold_analysis(y_true, y_proba, model_name, title="Threshold Analys
 def main():
     PUBLIC_ID = os.getenv("PUBLIC_ID")
     SECRET_KEY = os.getenv("SECRET_KEY")
-    BASE_URL = os.getenv("BASE_URL")
-    
-    print(BASE_URL," SECRET_KEY ",SECRET_KEY)
 
     print(f"\n--- Starting Workflow for Kusa SDK with Scikit-learn ---")
     print(f"--- Using Model: {SELECTED_SKLEARN_MODEL.__name__} ---")
@@ -132,29 +107,28 @@ def main():
     if not initialization or "metadata" not in initialization:
         print("❌ SDK Initialization failed."); return
     print(f"SDK Initialized. Total data rows: {initialization['metadata']['totalDataRows']}")
-  
+    # client.preview() was in your code, ensure it exists or use initialization['preview']
+    # print("Data Preview:\n", initialization.get('preview', pd.DataFrame()))
 
 
     print(" Fetching entire dataset...")
-    client.fetch_and_decrypt_batch(batch_size=10000) # SDK fetches all data
+    client.fetch_and_decrypt_batch(batch_size=10000) 
 
     print("⚙️ Configuring preprocessing...")
     # --- Preprocessing Configuration ---
-    # This is a critical step for good model performance
     preprocessing_config = { 
-        "tokenizer": "nltk",      # "spacy" can be better but slower
+        "tokenizer": "nltk",     
         "stopwords": True,
         "lowercase": True,
         "remove_punctuation": True,
-        "lemmatize": False,       # Set to True with "spacy" for potential improvement
+        "lemmatize": False,      
         "reduction": "tfidf",     # Good default for text.
                                   # Options: "none", "tfidf", "pca", "tfidf_pca"
         "tfidf_max_features": 2000, # More features for TF-IDF can help
-        "n_components": 50,         # If using PCA, more components often better than 2
+        "n_components": 50,        
         "target_column": TARGET_COLUMN,
         "target_encoding": "auto"
     }
-
 
     client.configure_preprocessing(preprocessing_config)
     client.run_preprocessing()
@@ -163,11 +137,10 @@ def main():
 
     print(f"🎯 Building training function for {SELECTED_SKLEARN_MODEL.__name__}...")
     
-    USE_GRID_SEARCH = False 
-
+    # --- Hyperparameter Setup & Optional GridSearchCV ---
+    USE_GRID_SEARCH = False
     param_grid_for_tuning = None
-
-    fixed_hyperparams = {"random_state": 42} # Common params
+    fixed_hyperparams = {"random_state": 42} 
 
     if SELECTED_SKLEARN_MODEL == RandomForestClassifier:
         fixed_hyperparams.update({"class_weight": "balanced"})
@@ -191,18 +164,17 @@ def main():
             fixed_hyperparams.update({"C": 1.0})
 
     elif SELECTED_SKLEARN_MODEL == SVC:
-        fixed_hyperparams.update({"class_weight": "balanced", "probability": True}) # probability=True for predict_proba
+        fixed_hyperparams.update({"class_weight": "balanced", "probability": True}) 
         if USE_GRID_SEARCH:
             param_grid_for_tuning = {
                 "C": [0.1, 1, 10],
                 "kernel": ["linear", "rbf"],
-                "gamma": ["scale", "auto"] # if kernel is rbf
+                "gamma": ["scale", "auto"] 
             }
         else:
             fixed_hyperparams.update({"C": 1.0, "kernel": "rbf"})
             
     elif SELECTED_SKLEARN_MODEL == GradientBoostingClassifier:
-
         if USE_GRID_SEARCH:
              param_grid_for_tuning = {
                 "n_estimators": [100, 200],
@@ -217,23 +189,18 @@ def main():
             param_grid_for_tuning = {"alpha": [0.1, 0.5, 1.0, 2.0]}
         else:
             fixed_hyperparams.update({"alpha": 1.0})
-    # Add more model-specific hyperparameter configurations and grids as needed
 
-    # The train_model_factory now takes the param_grid
     train_model_func = train_model_factory(
         framework="sklearn", 
         model_class=SELECTED_SKLEARN_MODEL,
-        fixed_params=fixed_hyperparams, # Params used if not in grid, or as base for GridSearch
+        fixed_params=fixed_hyperparams, 
         param_grid=param_grid_for_tuning if USE_GRID_SEARCH else None
     )
            
     print("🚀 Training model...")
-    # If using GridSearchCV, hyperparams passed to client.train might be minimal or empty,
-    # as GridSearchCV handles the search. The factory passes them through.
-    # For standard training, fixed_hyperparams are used.
     client.train(
          user_train_func=train_model_func, 
-         hyperparams={}, # Pass empty if GridSearchCV is handling it, or pass overrides
+         hyperparams={}, 
          target_column=TARGET_COLUMN,
          task_type="classification", 
          framework=TRAINING_FRAMEWORK
@@ -258,8 +225,8 @@ def main():
 
         if hasattr(trained_model_obj, "predict_proba"):
             y_pred_proba = trained_model_obj.predict_proba(X_val_processed)[:, 1]
-            # plot_precision_recall_curve(y_true_val, y_pred_proba, model_name_for_plot)
-            # plot_threshold_analysis(y_true_val, y_pred_proba, model_name_for_plot)
+            plot_precision_recall_curve(y_true_val, y_pred_proba, model_name_for_plot)
+            plot_threshold_analysis(y_true_val, y_pred_proba, model_name_for_plot)
         else:
             print(f"   Note: {model_name_for_plot} does not have predict_proba method. Skipping PR and Threshold plots.")
     else:
